@@ -8,3 +8,4 @@ env.bak/
 venv.bak/
 
 coursework.code-workspace
+constants.py
