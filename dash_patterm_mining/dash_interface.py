@@ -6,7 +6,7 @@ from constants import *
 import base64
 from data_converter import convert_to_transactions
 from pattern_miner import mine_patterns
-from data_requester import request, get_params
+from data_requester import get_data, get_data_params
 import asyncio
 import zipfile
 import io
@@ -15,7 +15,7 @@ import io
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 
-params = asyncio.run(get_params([i for i in (range(2010, 2023))]))
+params = asyncio.run(get_data_params([i for i in (range(2010, 2023))]))
 
 files = {JOURNALS_FILE_NAME: None, STUDENTS_FILE_NAME: None, 
          GRADES_FILE_NAME: None, RATINGS_FILE_NAME: None, EGE_FILE_NAME: None}
@@ -245,6 +245,15 @@ app.validation_layout = html.Div([
 @callback(Output('page-content', 'children'),
               Input('url', 'pathname'))
 def display_page(pathname):
+    """
+    Функция обработчик для обновления содержимого страницы на основе пути URL.
+
+    Параметры:
+    - pathname (str): Путь URL.
+
+    Возвращает:
+    - Объект, представляющий содержимое страницы для отображения.
+    """
     if pathname == "/page-1":
         return layout_page_1
     else:
@@ -256,11 +265,27 @@ def display_page(pathname):
           State('excel-filename-input', "value"),
           prevent_initial_call=True)
 def download_excel(n_clicks, filename):
+    """
+    Функция обработчик для скачивания данных в формате Excel (.xlsx).
+
+    Параметры:
+    - n_clicks (int): Количество кликов на кнопку скачивания.
+    - filename (str): Имя файла для сохранения.
+
+    Возвращает:
+    - Объект, представляющий данные файла Excel для скачивания.
+    """
     if n_clicks > 0 and isinstance(patterns, pd.DataFrame):
         return dcc.send_data_frame(patterns.to_excel, filename + ".xlsx", sheet_name="Sheet_name_1")
 
     
 def check_files():
+    """
+    Функция для проверки наличия загруженных файлов.
+
+    Возвращает:
+    - Кортеж из двух строк: найденные файлы и недостающие файлы.
+    """
     found_files = []
     missing_files = []
     for filename, data in files.items():
@@ -276,7 +301,16 @@ def check_files():
 
 
 def parse_json_data(contents, filenames):
-            
+    """
+    Функция для разбора и обработки данных JSON, полученных из загруженных файлов.
+
+    Параметры:
+    - contents (List[str]): Список содержимого загруженных файлов.
+    - filenames (List[str]): Список имен загруженных файлов.
+
+    Возвращает:
+    - Объект, представляющий результат разбора и обработки данных.
+    """      
     for content, filename in zip(contents, filenames):
         if filename.endswith('.zip'):
             try:
@@ -312,6 +346,17 @@ def parse_json_data(contents, filenames):
               State('upload-json-data', 'filename'),
               State('upload-json-data', 'last_modified'))
 def update_output(list_of_contents, list_of_names, list_of_dates):
+    """
+    Функция обработчик для обновления вывода после загрузки данных JSON.
+
+    Параметры:
+    - list_of_contents (List[str]): Список содержимого загруженных файлов.
+    - list_of_names (List[str]): Список имен загруженных файлов.
+    - list_of_dates (List[int]): Список временных меток загруженных файлов.
+
+    Возвращает:
+    - Объект, представляющий обновленный вывод для отображения.
+    """
     warning = html.Div()
     if list_of_contents is not None:
         warning = parse_json_data(list_of_contents, list_of_names)
@@ -342,7 +387,20 @@ def update_output(list_of_contents, list_of_names, list_of_dates):
               State('left_el', 'value'),
               State('right_el', 'value'))
 def get_data_from_api(n_clicks, sup, conf, lift, max_left_elements, max_right_elements):
+    """
+    Функция обработчик для получения данных из API.
 
+    Параметры:
+    - n_clicks (int): Количество кликов на кнопку получения данных.
+    - sup (float): Значение для поддержки (support).
+    - conf (float): Значение для достоверности (confidence).
+    - lift (float): Значение для уровня связи (lift).
+    - max_left_elements (int): Максимальное количество элементов в антецедентах.
+    - max_right_elements (int): Максимальное количество элементов в консеквентах.
+
+    Возвращает:
+    - Объект, представляющий результат получения данных для отображения.
+    """
     def cell_to_string(cell):
         if not isinstance(cell, str):
             try:
@@ -402,6 +460,15 @@ def get_data_from_api(n_clicks, sup, conf, lift, max_left_elements, max_right_el
     Input('year-dropdown', 'value')
 )
 def update_dish_dropdown(selected_years):
+    """
+    Функция обновления вариантов выбора для выпадающего списка квалификаций.
+
+    Параметры:
+    - selected_years (List[str]): Выбранные годы.
+
+    Возвращает:
+    - Список вариантов выбора для выпадающего списка квалификаций.
+    """
     if selected_years:
         selected_params = params[params["Year"].isin(selected_years)]
         options = [{'label': qualifiation, 'value': qualifiation} for qualifiation in selected_params["Speciality"].unique()]
@@ -416,6 +483,16 @@ def update_dish_dropdown(selected_years):
     State('year-dropdown', 'value')
 )
 def update_dish_dropdown(selected_qualifications, selected_years):
+    """
+    Функция обновления вариантов выбора для выпадающего списка направлений.
+
+    Параметры:
+    - selected_qualifications (List[str]): Выбранные квалификации.
+    - selected_years (List[str]): Выбранные годы.
+
+    Возвращает:
+    - Список вариантов выбора для выпадающего списка направлений.
+    """
     if selected_qualifications:
         selected_params = params[params["Year"].isin(selected_years)]
         selected_params = selected_params[selected_params["Speciality"].isin(selected_qualifications)]
@@ -431,10 +508,22 @@ def update_dish_dropdown(selected_qualifications, selected_years):
               State('qualification-dropdown', 'value'),
               State('directions-dropdown', 'value'))
 def get_data_from_api(n_clicks, years, qualifications, directions):
+    """
+    Функция обработчик для получения данных из API на странице 1.
+
+    Параметры:
+    - n_clicks (int): Количество кликов на кнопку получения данных.
+    - years (List[str]): Выбранные годы.
+    - qualifications (List[str]): Выбранные квалификации.
+    - directions (List[str]): Выбранные направления.
+
+    Возвращает:
+    - Объект, представляющий результат получения данных на странице 1 для отображения.
+    """
     global files
     if n_clicks > 0:
         if years and qualifications and directions:
-            data = asyncio.run(request(years, qualifications, directions))
+            data = asyncio.run(get_data(years, qualifications, directions))
             files[JOURNALS_FILE_NAME], files[STUDENTS_FILE_NAME], files[GRADES_FILE_NAME], files[RATINGS_FILE_NAME], files[EGE_FILE_NAME] = data
             return html.Div("Данные успешно получены")
         else: 
@@ -445,6 +534,16 @@ def get_data_from_api(n_clicks, years, qualifications, directions):
               Input('download-data-button', 'n_clicks'),
               State('filename-input', 'value'))
 def download_data(n_clicks, filename):
+    """
+    Функция обработчик для скачивания данных в формате ZIP.
+
+    Параметры:
+    - n_clicks (int): Количество кликов на кнопку скачивания данных.
+    - filename (str): Имя файла для сохранения.
+
+    Возвращает:
+    - Данные для скачивания ZIP-файла.
+    """ 
     if n_clicks > 0 and filename:
         _, missing_files = check_files()
         if len(missing_files) == 0:

@@ -86,7 +86,7 @@ async def get_and_bind_table_with_id(url, foreign_ids, foreign_id_column_name):
         return tables.drop_duplicates()
 
 
-async def get_params(years):
+async def get_data_params(years):
     """
     Эта функция сохраняет параметры журналов в формате JSON.
     Она вызывает функцию get_journals_by_year для получения данных о
@@ -104,7 +104,7 @@ async def get_params(years):
     return params.drop_duplicates()
 
 
-async def request(years, qualifications, direction_names):
+async def get_data(years, qualifications, direction_names):
     """
     Эта функция выполняет запросы и сохраняет данные о журналах, студентах, 
     оценках, рейтингах и ЕГЭ.

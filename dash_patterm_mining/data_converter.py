@@ -167,7 +167,6 @@ def convert_to_transactions(journals, students, ege, grades, ratings):
     grades_by_terms = grades_by_terms.groupby(['StudentId', 'Term'], as_index=0)['GradeDicile'].apply(lambda x: (x >= 4).sum() / len(x) * 100)
     grades_by_terms['GradeDicile'] = grades_by_terms['GradeDicile'].apply(get_mark_deciles)
     result_transactions = grades_by_terms.join(student_transactions.set_index("StudentId"), on="StudentId")
-    
 
     # add a products of retake status
     ratings_with_retake = ratings.join(
