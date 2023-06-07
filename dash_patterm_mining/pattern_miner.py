@@ -27,7 +27,8 @@ def mine_patterns(transactions_matrix, min_supp, min_lift, min_conf):
     rules.drop('consequent support', axis=1, inplace=True)
     rules.drop('leverage', axis=1, inplace=True)
     rules.drop('conviction', axis=1, inplace=True)
-    # rules.drop('zhangs_metric', axis=1, inplace=True)
+    if "zhangs_metric" in rules.columns:
+        rules.drop('zhangs_metric', axis=1, inplace=True)
     rules["support"] = rules["support"].round(4)
     rules["confidence"] = rules["confidence"].round(4)
     rules["lift"] = rules["lift"].round(4)

@@ -87,23 +87,28 @@ layout_index = html.Div(
                         children=[
                             html.Div([
                                 html.Label('Введите поддержку:'),
-                                dcc.Input(id='sup', type='number', value=0.1, min=0, step="any", style={'width': '500px'}),
+                                dcc.Input(id='sup', type='number', value=0.1, min=0, step=0.01, style={'width': '500px'},
+                                          required=True),
                             ], style={'margin': '10px'}),
                             html.Div([
                                 html.Label('Введите достоверность:'),
-                                dcc.Input(id='conf', type='number', value=0.1, min=0, step="any", style={'width': '500px'}),
+                                dcc.Input(id='conf', type='number', value=0.1, min=0, step=0.1, style={'width': '500px'},
+                                          required=True),
                             ], style={'margin': '10px'}),
                             html.Div([
                                 html.Label('Введите подъем:'),
-                                dcc.Input(id='lift', type='number', value=1, min=0, step="any", style={'width': '500px'}),
+                                dcc.Input(id='lift', type='number', value=1, min=0, step=0.1, style={'width': '500px'},
+                                    required=True),
                             ], style={'margin': '10px'}),
                             html.Div([
                                 html.Label('Максимум элементов слева:'),
-                                dcc.Input(id='left_el', type='number', value=3, min=1, step=1, style={'width': '500px'}),
+                                dcc.Input(id='left_el', type='number', value=3, min=1, step=1, style={'width': '500px'},
+                                    required=True),
                             ], style={'margin': '10px'}),
                             html.Div([
                                 html.Label('Максимум элементов справа:'),
-                                dcc.Input(id='right_el', type='number', value=1, min=1, step=1, style={'width': '500px'}),
+                                dcc.Input(id='right_el', type='number', value=1, min=1, step=1, style={'width': '500px'},
+                                          required=True),
                             ], style={'margin': '10px'}),
                             html.Div([
                                     html.Button('Выполнить поиск', id='search-btn', n_clicks=0, style={'width': '500px', 'height': '50px', 'font-size': '12px'}),
@@ -125,7 +130,9 @@ layout_index = html.Div(
                                             id='excel-filename-input', 
                                             type='text', 
                                             value='Шаблоны', 
-                                            style={'width': '290px'}),
+                                            style={'width': '290px'},
+                                            required=True
+                                            ),
                                     ],
                                     style={'margin-left': '10px'}
                                 ),
@@ -212,7 +219,8 @@ layout_page_1 = html.Div([
                                 id='filename-input', 
                                 type='text', 
                                 value='data', 
-                                style={'width': '280px'}),
+                                style={'width': '280px'},
+                                required=True),
                         ],
                         style={'margin-left': '10px'}
                     ),
@@ -275,7 +283,8 @@ def download_excel(n_clicks, filename):
     Возвращает:
     - Объект, представляющий данные файла Excel для скачивания.
     """
-    if n_clicks > 0 and isinstance(patterns, pd.DataFrame):
+    if n_clicks > 0 and isinstance(patterns, pd.DataFrame) and filename and filename != "":
+        print(filename)
         return dcc.send_data_frame(patterns.to_excel, filename + ".xlsx", sheet_name="Sheet_name_1")
 
     
@@ -420,6 +429,18 @@ def get_data_from_api(n_clicks, sup, conf, lift, max_left_elements, max_right_el
         for value in files.values():
             if not isinstance(value, pd.DataFrame):
                 return html.Span("Вы загрузили не все файлы", id="notification", style={})
+            if len(value) < 30:
+                return html.Span("В вашей выборке слишком мало данных", id="notification", style={})
+        if sup == None or sup <= 0 or sup >= 1:
+            return html.Span("Поддержка должна быть от 0 до 1", id="notification", style={})
+        if conf == None or conf <= 0 or conf >= 1:
+            return html.Span("Доставерность должна быть от 0 до 1", id="notification", style={})
+        if lift == None or lift < 1:
+            return html.Span("Подъем должен быть минимум 1", id="notification", style={})
+        if max_left_elements == None or max_left_elements < 1:
+            return html.Span("Слева может быть минимум один элемент", id="notification", style={})
+        if max_right_elements == None or max_right_elements < 1:
+            return html.Span("Справа может быть минимум один элемент", id="notification", style={})
         transactions = convert_to_transactions(
            files[JOURNALS_FILE_NAME],
            files[STUDENTS_FILE_NAME],
@@ -544,7 +565,7 @@ def download_data(n_clicks, filename):
     Возвращает:
     - Данные для скачивания ZIP-файла.
     """ 
-    if n_clicks > 0 and filename:
+    if n_clicks > 0 and filename and filename != "":
         _, missing_files = check_files()
         if len(missing_files) == 0:
             zip_buffer = io.BytesIO()
